@@ -1,0 +1,3 @@
+-This SQL query offers an overview of customer and order information.
+--Data source: A database comprising six tables with customer and sales information spanning January to May.
+
