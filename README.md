@@ -1,4 +1,4 @@
-# SQL Portfolio
+# Mary Pesado's SQL Portfolio
 Welcome to my repository of SQL projects! I've listed my personal SQL queries while working through a data analytics course. More to come! Feel free to reach me [here](https://www.linkedin.com/in/marypesado/) if you have any questions. The projects' data below originates from a modified version of Synthea, a synthetic patient database.
 
 
