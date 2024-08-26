@@ -1,0 +1,167 @@
+-- Previewing data
+select * from public.encounters
+LIMIT 10;
+
+
+-- How many encounters have been recorded for patients from each city?
+
+SELECT city
+    , COUNT(*)
+FROM public.patients p
+    LEFT JOIN public.encounters e
+        ON p.id = e.patient
+GROUP BY city
+ORDER BY COUNT(*);
+
+-- Which top 5 cities have the most encounters?
+
+SELECT city
+    , COUNT(*)
+FROM public.patients p
+    LEFT JOIN public.encounters e
+        ON p.id = e.patient
+GROUP BY city
+ORDER BY COUNT(*) DESC
+LIMIT 5;
+
+-- How many encounters fall into each encounter class category?
+
+SELECT encounterclass
+    , COUNT(*) AS number_of_encounters
+FROM public.encounters
+GROUP BY encounterclass
+ORDER BY number_of_encounters;
+
+
+-- What are the most frequent codes and descriptions used in encounters from 2020-2023?
+
+SELECT DISTINCT code -- checking how many codes there are
+    , description
+FROM public.encounters
+ORDER BY code;
+
+WITH filtered_years AS (
+    SELECT *
+    FROM (
+        SELECT *
+            , EXTRACT(YEAR FROM start) AS year
+            , SUBSTRING(start::varchar, 1, 7) AS year_month 
+        FROM public.encounters 
+    ) AS enc_with_years
+    WHERE year BETWEEN 2020 AND 2023
+)
+SELECT year
+    , encounterclass
+    , description
+    , code
+    , COUNT(*) AS enc_code_count
+FROM filtered_years
+GROUP BY year
+    , encounterclass
+    , description
+    , code
+ORDER BY enc_code_count DESC;
+
+-- What was the percentage of each encounter code used within the ambulatory encounter class in the year 2020?
+WITH filtered_encounters AS (
+    SELECT *, EXTRACT(YEAR FROM start) AS year
+    FROM public.encounters
+    WHERE EXTRACT(YEAR FROM start) = 2020 AND encounterclass = 'ambulatory' 
+)
+SELECT
+    encounterclass
+	,description
+	,code
+    ,COUNT(*) AS enc_code_count
+	,round(100*count(*)/sum(count(*)) OVER(),2) AS percentage
+FROM filtered_encounters
+GROUP BY code, encounterclass, description
+ORDER BY percentage DESC;
+
+
+-- Of the codes and descriptions used in encounters from 2020-2023, which were appointments, check-ups or consultations?
+
+WITH filtered_years AS (
+    SELECT *
+    FROM (
+        SELECT *
+            , EXTRACT(YEAR FROM start) AS year
+            , SUBSTRING(start::varchar, 1, 7) AS year_month 
+        FROM public.encounters 
+    )   
+    WHERE year BETWEEN 2020 AND 2023
+)
+SELECT year
+    , encounterclass
+    , description
+    , code
+    , COUNT(*) AS enc_code_count
+FROM filtered_years
+WHERE description ILIKE '%appoint%' 
+    OR description ILIKE '%Consult%' 
+    OR description ILIKE '%check%'   
+GROUP BY year
+    , encounterclass
+    , description
+    , code
+ORDER BY enc_code_count DESC;
+
+-- What is the average patient encounter time for each encounter class in days?
+
+WITH encounter_durations AS (
+    SELECT encounterclass
+        , justify_interval(stop - start) AS duration_interval
+    FROM public.encounters
+)
+SELECT encounterclass
+    , ROUND(AVG(EXTRACT(days FROM duration_interval) 
+                + EXTRACT(hours FROM duration_interval) / 24.0 
+                + EXTRACT(mins FROM duration_interval) / 1440.0), 2) AS avg_duration_days
+FROM encounter_durations
+GROUP BY encounterclass
+ORDER BY avg_duration_days DESC;
+
+-- What is the average duration day of encounters for different age groups of patients?
+
+WITH encounter_durations AS (
+    SELECT patient
+        , start
+        , stop
+        , justify_interval(stop - start) AS duration_interval
+    FROM public.encounters
+),
+patient_age_at_encounter AS (
+    SELECT ed.patient
+        , ed.start
+        , ed.stop
+        , ed.duration_interval
+        , EXTRACT(YEAR FROM AGE(ed.start, p.birthdate)) AS age  
+    FROM encounter_durations ed                                  
+    JOIN public.patients p 
+        ON ed.patient = p.id 
+),
+age_group_avg_duration AS (
+    SELECT CASE
+               WHEN age < 18 THEN '0-18'
+               WHEN age BETWEEN 19 AND 35 THEN '19-35'
+               WHEN age BETWEEN 36 AND 55 THEN '36-55'
+               WHEN age BETWEEN 56 AND 75 THEN '56-75'
+               ELSE '76+'  
+           END AS age_group
+        , ROUND(AVG(EXTRACT(days FROM duration_interval) 
+                    + EXTRACT(hours FROM duration_interval) / 24.0 
+                    + EXTRACT(mins FROM duration_interval) / 1440.0), 2) AS avg_duration_days
+    FROM patient_age_at_encounter
+    GROUP BY age_group
+)
+SELECT age_group
+    , avg_duration_days
+FROM age_group_avg_duration
+ORDER BY avg_duration_days;
+
+
+
+
+
+
+
