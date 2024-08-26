@@ -3,7 +3,7 @@ Welcome to my repository of SQL projects! I've listed my personal SQL queries wh
 
 
 ## SQL Projects
-**Patient Demographics and Healthcare Analysis** <br/>
+### **[Patient Demographics and Healthcare Analysis](https://github.com/maryera/SQL/blob/main/Patient%20Demographics%20Healthcare%20Analysis)** <br/>
 This SQL code performs an exploratory analysis of patient data to uncover key insights into healthcare spending, income distribution, demographic trends, and patient concentration across different geographic regions.  <br/>
 
 The analysis includes:
@@ -13,7 +13,7 @@ The analysis includes:
 * **Demographic Insights:** Analyzes patient distribution and age averages by county, identifying regions with the youngest populations and highest patient concentrations.
 * **Temporal and Racial Trends:** Examines the distribution of patients born over specific decades and compares average income, healthcare expenses, and coverage across races.
 
-**Patient Encounter Analysis and Optimization** <br/>
+### **[Patient Encounter Analysis and Optimization](https://github.com/maryera/SQL/blob/main/Patient%20Encounter%20Analysis%20and%20Optimization)** <br/>
 This SQL code provides an in-depth analysis of patient encounter data, focusing on encounter frequency, classification, and duration. 
 
 The analysis includes:
