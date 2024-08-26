@@ -1,0 +1,129 @@
+--Previewing data
+SELECT *
+FROM public.patients
+LIMIT 10
+;
+
+-- What is the total amount spent on healthcare by patients in each city?
+SELECT city
+	, ROUND(SUM(healthcare_expenses)::numeric,2) AS total_expense
+FROM public.patients
+GROUP BY city
+;
+
+-- What is the minimum, maximum, and average income among patients across each race? 
+	-- Consider cases where income has to be at least 10,000
+-- Additionally, what is the maximum and minimum healthcare coverage across each race?
+
+SELECT race
+	, MIN(income) AS min_income
+	, MAX(income) AS max_income
+	, ROUND(AVG(income),2) AS avg_income
+	, MIN(healthcare_coverage) AS min_coverage
+	, MAX(healthcare_coverage) AS max_coverage
+FROM public.patients
+	WHERE healthcare_coverage <> 0 AND income >= 10000 
+GROUP BY race
+	;
+
+-- What is the geographic distribution of patients per county, excluding deceased patients?
+-- As well, what is the average age per county?
+
+SELECT county
+   	, COUNT(id)
+	, round(AVG(EXTRACT(YEAR FROM AGE(birthdate))),0) AS avg_age 
+FROM public.patients
+WHERE deathdate IS NULL
+GROUP BY county;
+
+-- Which county has the youngest average population?
+
+SELECT county
+   	, COUNT(id)
+	, round(AVG(EXTRACT(YEAR FROM AGE(birthdate))),0) AS avg_age
+	, DENSE_RANK() OVER (ORDER BY round(AVG(EXTRACT(YEAR FROM AGE(birthdate))),0)) AS age_rank
+FROM public.patients
+WHERE deathdate IS NULL
+GROUP BY county
+ORDER BY age_rank;
+	
+	
+-- Which county has the highest patient concentration? 
+SELECT county
+	, COUNT(id) 
+FROM public.patients
+GROUP BY county
+ORDER BY COUNT(id) DESC
+LIMIT 1
+	;
+
+-- What is the cumulative number of patients born every 10 years starting from 1984?
+
+SELECT DISTINCT birthdate
+	, EXTRACT(YEAR FROM birthdate) AS birth_year
+		FROM public.patients
+	ORDER BY birth_year DESC;
+
+WITH birth_group_count AS(
+SELECT CASE
+           WHEN birth_year < 1984 THEN '< 1984'
+           WHEN birth_year BETWEEN 1984 AND 1993 THEN '1984 - 1993'  
+           WHEN birth_year BETWEEN 1994 AND 2003 THEN '1994 - 2003'  
+           WHEN birth_year BETWEEN 2004 AND 2013 THEN '2004 - 2013'  
+           WHEN birth_year BETWEEN 2014 AND 2023 THEN '2014 - 2023'
+       END AS birth_year_group
+     , COUNT(*) AS patient_count
+FROM (
+    SELECT birthdate, EXTRACT(YEAR FROM birthdate) AS birth_year
+    FROM public.patients
+) AS subquery
+GROUP BY birth_year_group
+ORDER BY birth_year_group
+)
+SELECT *
+	   , SUM(patient_count) OVER(ORDER BY birth_year_group) AS running_total
+FROM birth_group_count
+WHERE birth_year_group <> '< 1984'
+	;
+
+-- What is the average income level, healthcare expense, and healthcare coverage among each race?
+	-- I used casting here so that the ROUND function can accept the argument of AVG() where healthcare_expenses is of data type FLOAT
+
+SELECT race
+	, ROUND(AVG(income)::numeric, 2) AS average_income
+	, ROUND(AVG(healthcare_expenses)::numeric, 2) AS average_healthcare_expenses
+	, ROUND(AVG(healthcare_coverage)::numeric, 2) AS average_healthcare_coverage
+FROM
+    public.patients
+GROUP BY
+    race;
+
+-- How does the age distribution of patients vary?
+WITH birth_group_count AS(
+    SELECT 
+        CASE
+            WHEN EXTRACT(YEAR FROM birthdate) < 1984 THEN '< 1984' -- Use the actual expression here
+            WHEN EXTRACT(YEAR FROM birthdate) BETWEEN 1984 AND 1993 THEN '1984 - 1993'  
+            WHEN EXTRACT(YEAR FROM birthdate) BETWEEN 1994 AND 2003 THEN '1994 - 2003'  
+            WHEN EXTRACT(YEAR FROM birthdate) BETWEEN 2004 AND 2013 THEN '2004 - 2013'  
+            WHEN EXTRACT(YEAR FROM birthdate) BETWEEN 2014 AND 2023 THEN '2014 - 2023'
+        END AS birth_year_group,
+        COUNT(*) AS patient_count
+    FROM (
+        SELECT birthdate, EXTRACT(YEAR FROM birthdate) AS birth_year
+        FROM public.patients
+    ) AS subquery
+    GROUP BY birth_year_group
+    ORDER BY birth_year_group
+)
+SELECT *
+    , SUM(patient_count) OVER(ORDER BY birth_year_group) AS running_total
+FROM birth_group_count
+WHERE birth_year_group <> '< 1984';
+
+
+
+
+
+
+
