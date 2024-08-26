@@ -2,7 +2,7 @@
 Welcome to my repository of SQL projects! I've listed my personal SQL queries while working through a data analytics course. More to come! Feel free to reach me [here](https://www.linkedin.com/in/marypesado/) if you have any questions. The projects' data below originates from a modified version of Synthea, a synthetic patient database.
 
 
-## SQL Projects
+## SQL Project Highlights
 ### **[Patient Demographics and Healthcare Analysis](https://github.com/maryera/SQL/blob/main/Patient%20Demographics%20Healthcare%20Analysis)** <br/>
 This SQL code performs an exploratory analysis of patient data to uncover key insights into healthcare spending, income distribution, demographic trends, and patient concentration across different geographic regions.  <br/>
 
